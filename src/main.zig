@@ -23,4 +23,7 @@ pub fn main(init: std.process.Init) !void {
     try Request.read_request(io, connection, request_buffer[0..]);
 
     std.debug.print("{s}", .{request_buffer});
+
+    const request = Request.parse_request(&request_buffer);
+    std.debug.print("{any}\n", .{request});
 }

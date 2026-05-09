@@ -1,11 +1,11 @@
 const std = @import("std");
 const Stream = std.Io.net.Stream;
-const Map = std.static_string_map;
+const Map = std.static_string_map.StaticStringMap;
 
 pub const Method = enum {
     GET,
     pub fn init(text: []const u8) !Method {
-        return try MethodMap.get(text).?;
+        return MethodMap.get(text).?;
     }
     pub fn is_supported(m: []const u8) bool {
         const method = MethodMap.get(m);
@@ -33,6 +33,16 @@ pub const Request = struct {
         };
     }
 };
+
+pub fn parse_request(text: []const u8) Request {
+    const line_index = std.mem.findScalar(u8, text, '\n') orelse text.len;
+    var iterator = std.mem.splitScalar(u8, text[0..line_index], ' ');
+    const method = try Method.init(iterator.next().?);
+    const uri = iterator.next().?;
+    const version = iterator.next().?;
+    const request = Request.init(method, uri, version);
+    return request;
+}
 
 pub fn read_request(io: std.Io, conn: Stream, buffer: []u8) !void {
     var recv_buffer: [1024]u8 = undefined;
