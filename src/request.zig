@@ -1,5 +1,38 @@
 const std = @import("std");
 const Stream = std.Io.net.Stream;
+const Map = std.static_string_map;
+
+pub const Method = enum {
+    GET,
+    pub fn init(text: []const u8) !Method {
+        return try MethodMap.get(text).?;
+    }
+    pub fn is_supported(m: []const u8) bool {
+        const method = MethodMap.get(m);
+        if (method) |_| {
+            return true;
+        }
+        return false;
+    }
+};
+
+const MethodMap = Map(Method).initComptime(.{
+    .{ "GET", Method.GET },
+});
+
+pub const Request = struct {
+    method: Method,
+    uri: []const u8,
+    version: []const u8,
+
+    pub fn init(method: Method, uri: []const u8, version: []const u8) Request {
+        return Request{
+            .method = method,
+            .uri = uri,
+            .version = version,
+        };
+    }
+};
 
 pub fn read_request(io: std.Io, conn: Stream, buffer: []u8) !void {
     var recv_buffer: [1024]u8 = undefined;
