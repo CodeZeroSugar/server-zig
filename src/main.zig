@@ -1,6 +1,7 @@
 const std = @import("std");
 const Server = @import("server.zig").Server;
 const Request = @import("request.zig");
+const Response = @import("response.zig");
 const Io = std.Io;
 
 pub fn main(init: std.process.Init) !void {
@@ -22,8 +23,15 @@ pub fn main(init: std.process.Init) !void {
     @memset(request_buffer[0..], 0);
     try Request.read_request(io, connection, request_buffer[0..]);
 
-    std.debug.print("{s}", .{request_buffer});
-
     const request = Request.parse_request(&request_buffer);
-    std.debug.print("{any}\n", .{request});
+
+    if (request.method == Request.Method.GET) {
+        if (std.mem.eql(u8, "/", request.uri)) {
+            try Response.send200(connection, io);
+        } else {
+            try Response.send_404(connection, io);
+        }
+    } else {
+        try Response.send_404(connection, io);
+    }
 }
